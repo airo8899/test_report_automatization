@@ -29,7 +29,7 @@ def test_report(chat=None):
     plt.close()
     bot.sendPhoto(chat_id=chat_id, photo=plot_object)
 
-    data = Getch('select * from simulator.feed_actions where toDate(time) = today() limit 100').df
+    data = Getch('select * from simulator_20220320.feed_actions where toDate(time) = today() limit 100').df
     file_object = io.StringIO()
     data.to_csv(file_object)
     file_object.name = 'test_file.csv'
