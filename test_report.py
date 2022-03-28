@@ -13,7 +13,7 @@ sns.set()
 
 def test_report(chat=None):
     chat_id = chat or 453565850
-    bot = telegram.Bot(token='1987162789:AAFgHNqBv-v5VXPQcS0btoxtXECUvw8akMs')
+    bot = telegram.Bot(token='5167010511:AAETy3cSIsBkRmmrI-4DmhMTVurzlwfVLi4')
 
     msg = 'Hello'
     bot.sendMessage(chat_id=chat_id, text=msg)
