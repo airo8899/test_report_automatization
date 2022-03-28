@@ -1,18 +1,12 @@
+image: cr.yandex/crp742p3qacifd2hcon2/practice-da:latest
+
 stages:
-    - build
-    - test
-    - deploy
+    - init
+    - run
 
-job_name_1:
-    stage: build
-    before_script:
-        - echo 'build before_script'
-    script:
-        - echo 'hello'
-    after_script:
-        echo 'end'
-
-job_name_2:
-    stage: test
-    script:
-        - echo 'test job'
+test_report_job:
+    stage: run
+    only: 
+        - schedules
+    script: 
+        -python test_report.py
