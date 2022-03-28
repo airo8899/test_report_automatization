@@ -12,7 +12,7 @@ sns.set()
 
 
 def test_report(chat=None):
-    chat_id = chat or 454623234
+    chat_id = chat or 453565850
     bot = telegram.Bot(token='1987162789:AAFgHNqBv-v5VXPQcS0btoxtXECUvw8akMs')
 
     msg = 'Hello'
