@@ -9,4 +9,4 @@ test_report_job:
     only: 
         - schedules
     script: 
-        - python test_report.py
+        - python report_feed.py
