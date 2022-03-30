@@ -2,6 +2,7 @@ import telegram
 import matplotlib.pyplot as plt
 import seaborn as sns
 import io
+import os
 import pandas as pd
 import pandahouse
 from datetime import date, timedelta
@@ -22,6 +23,7 @@ def select(q):
 
 def test_report(chat=None):
     chat_id = chat or 453565850
+    # bot = telegram.Bot(token=os.environ.get("REPORT_BOT_TOKEN"))
     bot = telegram.Bot(token='5167010511:AAETy3cSIsBkRmmrI-4DmhMTVurzlwfVLi4')
 
     df = select('SELECT user_id, action FROM simulator_20220320.feed_actions WHERE toDate(time) = yesterday()')
