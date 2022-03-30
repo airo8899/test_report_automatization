@@ -10,3 +10,4 @@ test_report_job:
         - schedules
     script: 
         - python report_feed.py
+        - python report_feesd_message.py
