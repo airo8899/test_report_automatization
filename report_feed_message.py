@@ -25,7 +25,9 @@ sns.set_context('notebook')
 
 
 def test_report(chat=None):
-    chat_id = chat or 453565850
+    chat_id = chat or -1001539201117
+    # chat_id = chat or 453565850
+    
     # bot = telegram.Bot(token=os.environ.get("REPORT_BOT_TOKEN"))
     bot = telegram.Bot(token='5167010511:AAETy3cSIsBkRmmrI-4DmhMTVurzlwfVLi4')
     
@@ -171,8 +173,26 @@ def test_report(chat=None):
     df_message['new_users'] = df_new_user_message['new_users']
     df_message['Дата'] = df_message['date'].dt.strftime('%d.%m')
 
+    
+    top_10_post = select("""
+    SELECT post_id, COUNT(user_id) views 
+    FROM simulator_20220320.feed_actions
+    WHERE toDate(time) = yesterday()
+    GROUP BY post_id
+    ORDER BY COUNT(user_id) DESC
+    LIMIT 10""")
+    
+    file_object = io.BytesIO()
+    top_10_post.to_csv(file_object)
+    file_object.name = 'Top 10 posts.csv'
+    file_object.seek(0)
+
+     
+    
     bot.sendMessage(chat_id=chat_id, text=msg)
 
+    
+    
     fig, ax = plt.subplots(nrows=6, ncols=1, sharex=True, figsize=(12,12))
 
     title = f'Лента новостей\nЗначения метрик с {(date.today() - timedelta(days=7)).strftime("%d.%m.%Y")} по {yesterday}'
@@ -202,8 +222,12 @@ def test_report(chat=None):
     fig_object.seek(0)
     plt.close()
 
+    
     bot.sendPhoto(chat_id=chat_id, photo=fig_object)
 
+    
+    
+    
     fig, ax = plt.subplots(nrows=4, ncols=1, sharex=True, figsize=(12,12))
 
     title = f'Сервис сообщений\nЗначения метрик с {(date.today() - timedelta(days=7)).strftime("%d.%m.%Y")} по {yesterday}'
@@ -228,9 +252,12 @@ def test_report(chat=None):
     fig_object.seek(0)
     plt.close()
 
+    
     bot.sendPhoto(chat_id=chat_id, photo=fig_object)
     
-
+    bot.sendDocument(chat_id=chat_id, document=file_object)
+    
+    
 try:
     test_report()
 except Exception as e:

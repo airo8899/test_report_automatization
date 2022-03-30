@@ -22,7 +22,9 @@ def select(q):
     return pandahouse.read_clickhouse(q, connection=connection)
 
 def test_report(chat=None):
-    chat_id = chat or 453565850
+    chat_id = chat or -1001539201117
+    # chat_id = chat or 453565850
+    
     # bot = telegram.Bot(token=os.environ.get("REPORT_BOT_TOKEN"))
     bot = telegram.Bot(token='5167010511:AAETy3cSIsBkRmmrI-4DmhMTVurzlwfVLi4')
 
