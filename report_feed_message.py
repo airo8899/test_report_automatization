@@ -28,7 +28,7 @@ def test_report(chat=None):
     chat_id = chat or -1001539201117
     # chat_id = chat or 453565850
     
-    # bot = telegram.Bot(token=os.environ.get("REPORT_BOT_TOKEN"))
+    bot = telegram.Bot(token=os.environ.get("REPORT_BOT_TOKEN"))
     
     
     df = select('SELECT user_id, action FROM simulator_20220320.feed_actions WHERE toDate(time) = yesterday()')
