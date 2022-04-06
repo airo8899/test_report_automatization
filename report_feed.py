@@ -18,22 +18,30 @@ connection = {
     'database': 'simulator_20220320'
 }
 
+
+# функция запроса к бд
 def select(q):
     return pandahouse.read_clickhouse(q, connection=connection)
+
 
 def test_report(chat=None):
     chat_id = chat or -1001539201117
     # chat_id = chat or 453565850
     
     bot = telegram.Bot(token=os.environ.get("REPORT_BOT_TOKEN"))
-
-    df = select('SELECT user_id, action FROM simulator_20220320.feed_actions WHERE toDate(time) = yesterday()')
+    
+    # запрос юзера и типа действия за вчерашний день
+    df = select("""SELECT user_id, action 
+                    FROM simulator_20220320.feed_actions 
+                    WHERE toDate(time) = yesterday()""")
+    
     
     DAU = df['user_id'].nunique()
     view = len(df[df['action'] == 'view'])
     like = len(df[df['action'] == 'like'])
     CTR = round(like/view * 100, 2)
     
+    # создание строковой даты вида ДД.ММ.ГГГГ
     yesterday = (date.today() - timedelta(days=1)).strftime("%d.%m.%Y")
     
     msg = f"""Данные за вчерашний день {yesterday}:
@@ -44,7 +52,7 @@ def test_report(chat=None):
         
     bot.sendMessage(chat_id=chat_id, text=msg)
     
-    
+    # запрос даты, DAU, число просмотров, лайков, CTR от 8 дней назад до вчерашнего дня
     df = select("""SELECT toDate(time) date,
                        COUNT(DISTINCT user_id) DAU,
                        countIf(user_id, action='view') views,
@@ -57,6 +65,7 @@ def test_report(chat=None):
     df.columns = ['date', 'DAU', 'Просмотры', 'Лайки', 'CTR, %']
     df['Дата'] = df['date'].dt.strftime('%d.%m')
     
+    # создание графика 1 столбец, 4 строки
     g = sns.PairGrid(data=df,
                  x_vars=['Дата'],
                  y_vars=['DAU', 'Просмотры', 'Лайки', 'CTR, %'],

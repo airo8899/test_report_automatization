@@ -30,7 +30,7 @@ def test_report(chat=None):
     
     bot = telegram.Bot(token=os.environ.get("REPORT_BOT_TOKEN"))
     
-    
+    # создание метрик за вчерашний день, также изменение этих по сравнению с неделей назад (WoW)
     df = select('SELECT user_id, action FROM simulator_20220320.feed_actions WHERE toDate(time) = yesterday()')
     df_7 = select('SELECT user_id, action FROM simulator_20220320.feed_actions WHERE toDate(time) = yesterday()-7')
 
@@ -46,6 +46,8 @@ def test_report(chat=None):
     CTR_7 = len(df_7[df_7['action'] == 'like']) / len(df_7[df_7['action'] == 'view']) * 100
     CTR_WoW = (CTR - CTR_7) / CTR_7 * 100
 
+    
+    # новые пользователи за вчерашний день и сравнение с неделью назад
     df = select("""
         SELECT COUNT(user_id) FROM (
         SELECT DISTINCT user_id FROM simulator_20220320.feed_actions
@@ -61,6 +63,7 @@ def test_report(chat=None):
     new_users_feed = int(df.iloc[0, 0])
     new_users_feed_WoW = (new_users_feed - int(df_7.iloc[0, 0])) / int(df_7.iloc[0, 0]) * 100
 
+    # аналогично с новыми постами
     df = select("""
         SELECT COUNT(post_id) FROM (
         SELECT DISTINCT post_id FROM simulator_20220320.feed_actions
@@ -78,6 +81,7 @@ def test_report(chat=None):
 
 
 
+    # создание метрик DAU, число сообщений, число сообщений на пользователя + сравнение с предыдущей неделю
     df = select('SELECT user_id FROM simulator_20220320.message_actions WHERE toDate(time) = yesterday()')
     df_7 = select('SELECT user_id FROM simulator_20220320.message_actions WHERE toDate(time) = yesterday()-7')
 
@@ -86,7 +90,7 @@ def test_report(chat=None):
     messages_per_user = messages/DAU_message
     DAU_message_WoW = (DAU_message - df_7['user_id'].nunique()) / df_7['user_id'].nunique() * 100
     messages_WoW = (messages - len(df_7)) / len(df_7) * 100
-
+    
     messages_per_user_7 = df_7['user_id'].nunique()/len(df) * 100
     messages_per_user_WoW = (messages_per_user - messages_per_user_7) / messages_per_user_7 * 100
 
@@ -101,6 +105,7 @@ def test_report(chat=None):
         GROUP BY user_id
         HAVING MIN(toDate(time)) = yesterday()-7)""")
 
+    # прирост новых ползователей сервиса сообщений
     new_users_message = int(df.iloc[0, 0])
     new_users_message_WoW = (new_users_message - int(df_7.iloc[0, 0])) / int(df_7.iloc[0, 0]) * 100
 
@@ -122,7 +127,8 @@ def test_report(chat=None):
         Новые пользователи - {new_users_message} {'+' if new_users_message_WoW > 0 else ''}{new_users_message_WoW:.2f}% WoW"""
 
     # print(msg)
-
+    
+    # получить метрики ленты за прошедшую неделю
     df = select("""
     SELECT toDate(time) date,
            COUNT(DISTINCT user_id) DAU,
@@ -133,6 +139,7 @@ def test_report(chat=None):
     WHERE toDate(time) > yesterday()-7 AND toDate(time) <= yesterday()
     GROUP BY toDate(time)""")
 
+    # получить прирост новых пользователей за прошедшую неделю
     df_new_user = select("""
     SELECT COUNT(user_id) new_users, time FROM (
         SELECT DISTINCT user_id, MIN(toDate(time)) time FROM simulator_20220320.feed_actions
@@ -140,6 +147,8 @@ def test_report(chat=None):
     WHERE time BETWEEN yesterday()-6 AND yesterday()
     GROUP BY time
     ORDER BY time""")
+    
+    # получить прирост новых постов за прошедшую неделю
     df_new_post = select("""
     SELECT COUNT(post_id) new_posts, time FROM (
         SELECT DISTINCT post_id, MIN(toDate(time)) time FROM simulator_20220320.feed_actions
@@ -152,6 +161,7 @@ def test_report(chat=None):
     df['new_posts'] = df_new_post['new_posts']
     df['Дата'] = df['date'].dt.strftime('%d.%m')
 
+    # получить метрики сервиса сообщений за прошедшую неделю
     df_message = select("""
     SELECT toDate(time) date,
           COUNT(DISTINCT user_id) DAU,
@@ -161,6 +171,7 @@ def test_report(chat=None):
     WHERE toDate(time) > yesterday()-7 AND toDate(time) <= yesterday()
     GROUP BY toDate(time)""")
 
+    # получить прирост новых пользователей сервиса сообщений за прошедшую неделю
     df_new_user_message = select("""
     SELECT COUNT(user_id) new_users, time FROM (
         SELECT DISTINCT user_id, MIN(toDate(time)) time FROM simulator_20220320.message_actions
@@ -172,7 +183,7 @@ def test_report(chat=None):
     df_message['new_users'] = df_new_user_message['new_users']
     df_message['Дата'] = df_message['date'].dt.strftime('%d.%m')
 
-    
+    # получить топ 10 просматривыемых постов за прошедшую неделю
     top_10_post = select("""
     SELECT post_id, COUNT(user_id) views 
     FROM simulator_20220320.feed_actions
@@ -191,7 +202,7 @@ def test_report(chat=None):
     bot.sendMessage(chat_id=chat_id, text=msg)
 
     
-    
+    # линейный график на каждую метрику ленты новостей
     fig, ax = plt.subplots(nrows=6, ncols=1, sharex=True, figsize=(12,12))
 
     title = f'Лента новостей\nЗначения метрик с {(date.today() - timedelta(days=7)).strftime("%d.%m.%Y")} по {yesterday}'
@@ -226,7 +237,7 @@ def test_report(chat=None):
 
     
     
-    
+    # линейный график на каждую метрику сервиса сообщений
     fig, ax = plt.subplots(nrows=4, ncols=1, sharex=True, figsize=(12,12))
 
     title = f'Сервис сообщений\nЗначения метрик с {(date.today() - timedelta(days=7)).strftime("%d.%m.%Y")} по {yesterday}'
